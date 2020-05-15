@@ -1,4 +1,5 @@
 import os, glob
+from pathlib import Path
 
 raw_data_folder = '00_Raw'
 qc_folder = '01_QC'
@@ -7,17 +8,19 @@ genome_file = 'bacteroides_thetaiotamicron_VPI5482_ref_genome.fa'
 gtf_file = 'bacteroides_thetaiotamicron_VPI5482.gtf'
 
 def quality_filtering():
+	Path(qc_folder).mkdir(parents=True, exist_ok=True)
 	files = glob.glob('%s/*.fastq.gz' % (raw_data_folder))
 	for f in files:
 		os.system('trim_galore --gzip -o %s -j 4 %s' % (qc_folder, f))
 
 def align_reads_bwa():
-	files = glob.glob('%s/*.fastq.gz' % (qc_folder))
+	Path(aligned_folder).mkdir(parents=True, exist_ok=True)
+	files = glob.glob('%s/*.fq.gz' % (qc_folder))
 	os.system('bwa index %s' % (genome_file))
 	for f in files:
-		filename = f.split('/')[-1].split(.)[0]
+		filename = f.split('/')[-1].split('.')[0]
 		sam_file = '%s/%s.sam' % (aligned_folder, filename)
-		print('Aligning with %s bwa' % (filename))
+		print('Aligning %s using bwa' % (filename))
 		os.system('bwa mem -v 1 %s %s > %s' % (genome_file, f, sam_file))
 		print('Converting sam to bam')
 		bam_file = '%s/%s.bam' % (aligned_folder, filename)
@@ -30,4 +33,5 @@ def align_reads_bwa():
 		print('')
 
 if __name__ == '__main__':
-	quality_filtering()
+	#quality_filtering()
+	align_reads_bwa()
